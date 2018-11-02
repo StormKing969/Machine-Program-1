@@ -1,0 +1,539 @@
+Script started on Tue 02 Oct 2018 03:15:14 PM EDT
+tuser@tutor-vserver:~$ ssh wasajana@users.cs.umb.edu
+wasajana@users.cs.umb.edu's password: 
+Welcome to Ubuntu 16.04.5 LTS (GNU/Linux 4.4.0-137-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+9 packages can be updated.
+5 updates are security updates.
+
+New release '18.04.1 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+You have new mail.
+Last login: Tue Oct  2 15:08:42 2018 from 172.22.107.208
+wasajana@itserver6:~$ ssh ulab
+wasajana@ulab's password: 
+Last login: Tue Oct  2 15:08:50 2018 from itserver6.cs.um
+Sun Microsystems Inc.   SunOS 5.8       Generic 64-bit  February 2000
+
+ Welcome to blade57.cs.umb.edu, a SunBlade 100 (uIIe-S128)
+
+                    Authorized users only.
+
+You have new mail.
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+blade57(1)% cd cs341/mp1
+blade57(2)% ls -al
+total 116
+drwxrwsr-x   2 wasajana     4096 Oct  2 15:10 .
+drwxrws---   4 wasajana     4096 Sep 13 16:57 ..
+-rw-r--r--   1 wasajana     3708 Oct  2 14:26 cmds.c
+-rw-r--r--   1 wasajana     6952 Oct  2 15:10 cmds.o
+-rw-r--r--   1 wasajana     1720 Oct  2 15:10 cmds.opc
+-rw-r--r--   1 wasajana     4000 Oct  2 14:26 discussion.txt
+-rw-r--r--   1 wasajana     2772 Oct  1 18:23 makefile
+-rw-r--r--   1 wasajana     2392 Sep 13 16:57 slex.c
+-rw-r--r--   1 wasajana     1846 Sep 13 16:57 slex.h
+-rw-r--r--   1 wasajana     3852 Oct  2 15:10 slex.o
+-rw-r--r--   1 wasajana      473 Oct  2 15:10 slex.opc
+-rw-r--r--   1 wasajana     2244 Oct  2 15:10 syms
+-rwxr-xr-x   1 wasajana    14660 Oct  2 15:10 tutor
+-rw-r--r--   1 wasajana     2210 Sep 18 16:05 tutor.c
+-rwxr-xr-x   1 wasajana    29776 Oct  2 15:10 tutor.lnx
+-rw-r--r--   1 wasajana     4080 Oct  2 15:10 tutor.o
+-rw-r--r--   1 wasajana      725 Oct  2 15:10 tutor.opc
+-rw-r--r--   1 wasajana     2031 Oct  2 15:10 usyms
+blade57(3)% cat slex.c
+/******************************************************************
+*
+*   file:   slex.c
+*   author: betty o'neil
+*   date:   ?
+*
+*   simple lexical analyzer, front part of a parser                   
+*   --compare to UNIX tool "lex", general lexical analyzer            
+*   gets a (space-delimited) token from linebuf and tries to match    
+*   it to one of the cmdtokens in the provided cmdtable             
+*
+*   accepts:       
+*         linebuf--string to get token from                         
+*         cmdtable--cmdtable to use                                 
+*   returns:                                                          
+*         *cnum_ptr--command # (offset in cmdtable) or -1 if no match
+*         *pos_ptr--new place in linebuf after token match          
+*
+*   improvements needed:
+*         make token matching case independent
+*         skip whitespace, not just blanks
+*
+*   revisions: 
+*     9/90 cleanup, convert function headers to ansi form
+*
+*/
+
+#include <stdio.h>
+#include <string.h>
+#include "slex.h"               /* for definition of type cmd */
+
+int slex(char *linebuf,    /* string from user */
+         Cmd cmdtable[],   /* cmd table to use */
+         int *cnum_ptr,    /* returned command number */
+         int *pos_ptr)      /* returned new place in linebuf */
+{
+  int i = 0;
+  char token[MAXTOKENLEN];
+  int newpos;
+
+  if (gettoken(linebuf,token,&newpos)<0) /* get token from linebuf */
+    return -1;                  /* couldn't find token */
+
+  while ((cmdtable[i].cmdtoken != NULL)) {
+    if (strcmp(cmdtable[i].cmdtoken,token)==0) {
+        *cnum_ptr = i;          /* success--return command # */
+        *pos_ptr = newpos;      /* and where we got to in linebuf */
+        return 0;
+    }
+    else
+      i++;                      /* keep scanning table */
+  }
+  return -1;                    /* no match */
+}
+
+/******************************************************************
+ * get one space-delimited token from string in linebuf, also return 
+ * new position in string 
+ */
+int gettoken(char *linebuf, char *token, int *pos_ptr)
+{
+  int i = 0;
+  int j = 0;
+
+  while (linebuf[i] == ' ')
+    i++;                        /* skip blanks */
+  while (linebuf[i] != ' '&&linebuf[i]!='\0')
+    token[j++] = linebuf[i++];  /* copy chars to token */
+  if (j==0)
+    return -1;                  /* nothing there */
+  else
+    {
+      token[j] = '\0';          /* null-terminate token */
+      *pos_ptr = i;             /* return place in linebuf we got to */
+      return 0;                 /* success */
+    }
+}
+blade57(4)% cat tutor.c
+/******************************************************************
+*
+*   file:     tutor.c
+*   author:   eb
+*   date:     September, 1990
+*
+*   Driver for a "tutor" program to mimic and extend the MECB ROM TUTOR.
+* 
+*   built from betty o'neil's previous version
+*
+*   revisions:
+*   Jan '96: changed prompt to PC-tutor, now mimics floppy-based Tutor
+*/
+
+#include <stdio.h>
+#include "slex.h" 
+/* The preprocessor symbol SAPC is #defined in $pcinc/stdio.h.  This
+ * stdio.h is found by i386-gcc because of the -I flag in its compile command
+ * in the Makefile.  In the UNIX case, there is no such redirection,
+ * so the ordinary stdio.h is used, and it has no SAPC definition.
+ */
+#ifdef SAPC
+#define PROMPT "PC-tutor> "
+#else
+#define PROMPT "UNIX-tutor> "
+#endif
+int main(void);
+
+int main()
+{
+  int done = 0;
+  int cnum,linepos;
+  char linebuf[LINELEN];
+  Cmd *cp;
+
+  printf("     cmd    help message\n");
+  for(cp = cmds; cp->cmdtoken; cp++) 
+      printf("%8s    %s\n", cp->cmdtoken, cp->help);
+
+  while (!done) {
+    /* get cmd token from user by parsing first part of line in linebuf-- */
+    getcmd(linebuf,&cnum,&linepos);
+    /* call implementation routine for matched cmd-- */
+    /* (remaining part of line to parse starts at linebuf+linepos) */
+    done = cmds[cnum].cmdfn(&cmds[cnum], linebuf+linepos); 
+  }
+  return 0;
+}
+
+/***********************************************************************
+*
+*  getcmd 
+*
+* Better than scanf--read whole line in, parse resulting string.
+* Uses slex package to match cmd token in first part of linebuf 
+* and return command # and where to continue parsing.
+* Getcmd loops until user provides proper command, so no error return.
+*/
+void getcmd(char *linebuf, 
+             int *cnum_ptr,   /* returned command number */
+             int *pos_ptr     /* position in linebuf (after cmd token) */
+           )
+{
+  int done = 0;
+
+  while (!done) {
+     printf( PROMPT );
+     gets(linebuf);             /* read line from user, null terminate */
+     /* match cmd token to get cnum--call slex package to do lookup-- */
+     if (slex( linebuf, cmds, cnum_ptr, pos_ptr)==0) 
+         done = 1;      /* success in matching cmd */
+     else
+         printf(" No such command\n");
+  }
+}
+blade57(5)% cat cmds.c
+/******************************************************************
+*
+*   file:     cmds.c
+*   author:   betty o'neil
+*   date:     ?
+*
+*   semantic actions for commands called by tutor (cs341, hw2)
+*
+*   revisions:
+*      9/90  eb   cleanup, convert function declarations to ansi
+*      9/91  eb   changes so that this can be used for hw1
+*      9/02  re   minor changes to quit command
+*/
+/* the Makefile arranges that #include <..> searches in the right
+   places for these headers-- 200920*/
+
+#include <stdio.h>
+#include "slex.h"
+
+/*===================================================================*
+*
+*   Command table for tutor program -- an array of structures of type
+*   cmd -- for each command provide the token, the function to call when
+*   that token is found, and the help message.
+*
+*   slex.h contains the typdef for struct cmd, and declares the
+*   cmds array as extern to all the other parts of the program.
+*   Code in slex.c parses user input command line and calls the
+*   requested semantic action, passing a pointer to the cmd struct
+*   and any arguments the user may have entered.
+*
+*===================================================================*/
+
+PROTOTYPE int stop(Cmd *cp, char *arguments);
+PROTOTYPE int mem_display(Cmd *cp, char *arguments);
+PROTOTYPE int mem_set(Cmd *cp, char *arguments);
+PROTOTYPE int help(Cmd *cp, char *arguments);
+
+/* command table */
+
+Cmd cmds[] = {{"md",  mem_display, "Memory display: MD <addr>"},
+                          {"ms",  mem_set, "Memory set: MS<addr><value>"},
+                          {"h",   help,        "Help: H <command>"},
+              {"s",   stop,        "Stop" },
+              {NULL,  NULL,        NULL}};  /* null cmd to flag end of table */
+
+char xyz = 6;  /* test global variable  */
+char *pxyz = &xyz;  /* test pointer to xyz */
+/*===================================================================*
+*               command                 routines
+*
+*   Each command routine is called with 2 args, the remaining
+*   part of the line to parse and a pointer to the struct cmd for this
+*   command. Each returns 0 for continue or 1 for all-done.
+*
+*===================================================================*/
+
+int stop(Cmd *cp, char *arguments) {
+        return 1;                       /* all done flag */
+}
+
+/*===================================================================*
+*
+*   mem_display: display contents of 16 bytes in hex
+*
+*/
+int help(Cmd *cp, char *arguments) {
+        char input[20];
+        sscanf(arguments, "%s", input);
+        if((strcmp("md", input)) == 0) {
+                printf("Memory display: MD <addr> \n");
+        }
+        else if((strcmp("ms", input)) == 0) {
+                printf("Memory set: MS<addr><value> \n");
+        }
+        else if((strcmp("h", input)) == 0) {
+                printf("Help: H <command> \n");
+        }
+        else if((strcmp("s", input)) == 0) {
+                printf("Stop \n");
+        }
+        else {
+                printf("Memory display: MD <addr> \n");
+                printf("Memory set: MS<addr><value> \n");
+                printf("Help: H <command> \n");
+                printf("Stop \n");
+        }
+        return 0;
+}
+
+int mem_display(Cmd *cp, char *arguments) {
+        unsigned char *ptr;
+        int location = 0;
+        int num;
+
+        sscanf(arguments, "%x", &location);
+        printf("%08x ", location);
+
+        ptr = (char *)location;
+
+        for (num = 0; num < 16; num = num + 1) {
+                printf("%02x ", *ptr);
+                ptr = ptr + 1;
+        }
+
+        for(num = 0; num < 16; num = num + 1) {
+                if((*ptr++) >= 0x20 && (*ptr++) <= 0x7e) {
+                        printf("%c", *(ptr + num));
+                }
+                else {
+                        printf(".");
+                }
+        }
+
+        printf("\n");
+        printf("Reached mem_display, passed argument string: |%s|\n", arguments);
+        printf("        help message: %s\n", cp->help);
+        return 0;       
+}
+
+int mem_set(Cmd *cp, char * arguments) {
+        int old = 0;
+        int new = 0;
+        char *ptr;
+        if(sscanf(arguments,"%x %x", &old, &new) == 2) {
+                ptr = (unsigned char *)old;
+                *ptr = new;
+        }       
+        else {
+                printf("Error \n");
+        }
+        return 0;
+}blade57(6)% make clean
+rm -f *.o *.opc *.syms *.usyms *.lnx tutor core syms usyms
+blade57(7)% make
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/wasajana/cs341/mp1 -c -o cmds.opc cmds.c
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/wasajana/cs341/mp1 -c -o /home/wasajana/cs341/mp1/tutor.opc /home/wasajana/cs341/mp1/tutor.c
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+/groups/ulab/bin/i386-gcc -Wall -Wno-implicit -Wshadow -I/groups/ulab/pcdev/include -I/home/wasajana/cs341/mp1 -c -o /home/wasajana/cs341/mp1/slex.opc /home/wasajana/cs341/mp1/slex.c
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+ERROR around line# 21 with modulefile 'mybin':
+        no files matched glob pattern "~wasajana/bin"
+
+An error occured while processing your module command.
+        -- Only changes pertaining to the 
+                'mybin' modulefile were not completed
+
+-------------------------------------------------------------------
+/groups/ulab/bin/i386-ld -N -Ttext 1000e0 -o tutor.lnx \
+        /groups/ulab/pcdev/lib/startup0.opc /groups/ulab/pcdev/lib/startup.opc \
+        /home/wasajana/cs341/mp1/tutor.opc /home/wasajana/cs341/mp1/slex.opc cmds.opc /groups/ulab/pcdev/lib/libc.a
+rm -f syms;/groups/ulab/bin/i386-nm -n tutor.lnx>syms
+blade57(8)% make tutor
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/wasajana/cs341/mp1   -c -o /home/wasajana/cs341/mp1/tutor.o /home/wasajana/cs341/mp1/tutor.c
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/wasajana/cs341/mp1   -c -o /home/wasajana/cs341/mp1/slex.o /home/wasajana/cs341/mp1/slex.c
+gcc -Wall -Wno-implicit -Wshadow -g -I/home/wasajana/cs341/mp1   -c -o cmds.o cmds.c
+cmds.c:133:2: warning: no newline at end of file
+gcc -g -o tutor /home/wasajana/cs341/mp1/tutor.o /home/wasajana/cs341/mp1/slex.o cmds.o
+rm -f usyms; nm -vpt x tutor > usyms
+blade57(9)% ./tutor
+     cmd    help message
+      md    Memory display: MD <addr>
+      ms    Memory set: MS<addr><value>
+       h    Help: H <command>
+       s    Stop
+UNIX-tutor> h md
+Memory display: MD <addr> 
+UNIX-tutor> h ms
+Memory set: MS<addr><value> 
+UNIX-tutor> h s
+Stop 
+UNIX-tutor> h h
+Help: H <command> 
+UNIX-tutor> h
+Memory display: MD <addr> 
+Memory set: MS<addr><value> 
+Help: H <command> 
+Stop 
+UNIX-tutor> md 20000
+00020000 7f 45 4c 46 01 02 01 00 00 00 00 00 00 00 00 00 ........... ..(.
+Reached mem_display, passed argument string: | 20000|
+        help message: Memory display: MD <addr>
+UNIX-tutor> ms 20000 d6
+UNIX-tutor> md 20000
+00020000 d6 45 4c 46 01 02 01 00 00 00 00 00 00 00 00 00 ........... ..(.
+Reached mem_display, passed argument string: | 20000|
+        help message: Memory display: MD <addr>
+UNIX-tutor> md 20010
+00020010 00 02 00 02 00 00 00 01 00 01 06 64 00 00 00 34 ........" ..  .
+Reached mem_display, passed argument string: | 20010|
+        help message: Memory display: MD <addr>
+UNIX-tutor> ms 20010 d6
+UNIX-tutor> md 20010
+00020010 d6 02 00 02 00 00 00 01 00 01 06 64 00 00 00 34 ........" ..  .
+Reached mem_display, passed argument string: | 20010|
+        help message: Memory display: MD <addr>
+UNIX-tutor> s
+blade57(10)% exit
+logout
+Connection to ulab closed.
+wasajana@itserver6:~$ exit
+logout
+Connection to users.cs.umb.edu closed.
+tuser@tutor-vserver:~$ mtip -f tutor.lnx
+For command help, type ~?
+For help on args, rerun without args
+Code starts at 0x100100
+Using board # 1 
+Please type <CR> to confirm console setting: 
+Setting console dev to COM2Console: colour EGA+ 80x25
+COM1 at 0x03f8 (irq = 4) is a 16550A
+COM2 at 0x02f8 (irq = 3) is a 16550A
+
+                 Welcome to UMB Tutor for the PC
+   UMB Tutor is a 32-bit protected-mode PC debugger/downloader,
+       based on Linux, UMB Tutor for m68k, and remote gdb.
+UMB Tutor is free software and you are welcome to distribute copies
+of it under certain conditions.  There is no warranty for this program.
+The copyright and warranty provisions follow the Gnu general public
+license, available for view in gdb and elsewhere.  Full sources available.
+--bugs, suggestions, questions to eoneil@cs.umb.edu
+
+Exception 3 at EIP=00057a9b: Breakpoint
+Tutor> ~downloading tutor.lnx
+
+........Done.
+
+Download done, setting EIP to 100100.
+Tutor> go 100100
+     cmd    help message
+      md    Memory display: MD <addr>
+      ms    Memory set: MS<addr><value>
+       h    Help: H <command>
+       s    Stop
+PC-tutor> h md
+Memory display: MD <addr> 
+PC-tutor> h ms
+Memory set: MS<addr><value> 
+PC-tutor> h s
+Stop 
+PC-tutor> h h
+Help: H <command> 
+PC-tutor> h
+Memory display: MD <addr> 
+Memory set: MS<addr><value> 
+Help: H <command> 
+Stop 
+PC-tutor> md 10000
+00010000 ea 05 00 c0 07 8c c8 8e d8 8e c0 8e d0 31 e4 fb . 	ª.Î¿.Í..cb.gr
+Reached mem_display, passed argument string: | 10000|
+        help message: Memory display: MD <addr>
+PC-tutor> ms 10000 d6
+PC-tutor> md 10000
+00010000 d6 05 00 c0 07 8c c8 8e d8 8e c0 8e d0 31 e4 fb . 	ª.Î¿.Í..cb.gr
+Reached mem_display, passed argument string: | 10000|
+        help message: Memory display: MD <addr>
+PC-tutor> md 10010
+00010010 fc be 2d 00 ac 20 c0 74 09 b4 0e bb 07 00 cd 10 ..Í.cbtgr oysoo
+Reached mem_display, passed argument string: | 10010|
+        help message: Memory display: MD <addr>
+PC-tutor> ms 10010 d6
+PC-tutor> md 10010
+00010010 d6 be 2d 00 ac 20 c0 74 09 b4 0e bb 07 00 cd 10 ..Í.cbtgr oysoo
+Reached mem_display, passed argument string: | 10010|
+        help message: Memory display: MD <addr>
+PC-tutor> s
+Exception 3 at EIP=00100110: Breakpoint
+Tutor> 
+Tutor> 
+Quit handler: 
+killing process 2088 Leaving board #1
+tuser@tutor-vserver:~$ exit
+exit
+
+Script done on Tue 02 Oct 2018 03:21:00 PM EDT

@@ -1,0 +1,102 @@
+
+
+tutor:
+0x00000000 f crtstuff.c
+0x00000000 f slex.c
+0x00000000 f tutor.c
+0x00000000 f crti.s
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 s 
+0x00000000 f cmds.c
+0x00000000 f tutor
+0x00000000 f crtstuff.c
+0x00000000 f values-Xa.c
+0x00000000 U __deregister_frame_info
+0x00000000 U __register_frame_info
+0x00000000 U _Jv_RegisterClasses
+0x00000000 f crtn.s
+0x00010000 d _START_
+0x000100d4 s 
+0x000100e8 s 
+0x00010210 s 
+0x00010440 s 
+0x0001059c s 
+0x000105bc s 
+0x000105e0 s 
+0x000105ec s 
+0x00010664 s 
+0x00010664 T _start
+0x000106e0 t __do_global_dtors_aux
+0x0001078c t call___do_global_dtors_aux
+0x00010798 t frame_dummy
+0x0001081c t call_frame_dummy
+0x00010828 T main
+0x00010944 T getcmd
+0x000109e0 T slex
+0x00010aec T gettoken
+0x00010c18 T stop
+0x00010c34 T help
+0x00010dac T mem_display
+0x00010f44 T mem_set
+0x00010fd0 t __do_global_ctors_aux
+0x0001101c t call___do_global_ctors_aux
+0x00011028 s 
+0x00011028 T _init
+0x00011044 s 
+0x00011044 T _fini
+0x00011058 D _lib_version
+0x00011058 s 
+0x00011238 D _etext
+0x00021238 D _GLOBAL_OFFSET_TABLE_
+0x00021238 s 
+0x00021260 D _PROCEDURE_LINKAGE_TABLE_
+0x00021260 s 
+0x00021290 U atexit
+0x0002129c U exit
+0x000212a8 U _exit
+0x000212d8 U printf
+0x000212e4 U gets
+0x000212f0 U strcmp
+0x000212fc U sscanf
+0x0002130c D _DYNAMIC
+0x0002130c s 
+0x000213d4 s 
+0x000213d4 d force_to_data
+0x000213d8 D __dso_handle
+0x000213dc D cmds
+0x00021418 D xyz
+0x0002141c D pxyz
+0x00021420 d force_to_data
+0x00021424 s 
+0x00021424 d __CTOR_LIST__
+0x00021428 d __CTOR_END__
+0x0002142c s 
+0x0002142c d __DTOR_LIST__
+0x00021430 d __DTOR_END__
+0x00021434 d __FRAME_END__
+0x00021434 s 
+0x00021434 d __EH_FRAME_BEGIN__
+0x00021438 s 
+0x00021438 d __JCR_LIST__
+0x00021438 d __JCR_END__
+0x0002143c s 
+0x0002143c d p.0
+0x00021440 b 
+0x00021440 b completed.1
+0x00021440 D _edata
+0x00021444 b object.2
+0x0002145c B environ
+0x0002145c B _environ
+0x00021460 B _end
+0x00021460 b _END_
